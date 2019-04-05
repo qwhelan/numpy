@@ -48,7 +48,7 @@ class AnyAll(Benchmark):
 
 
 class MinMax(Benchmark):
-    params = [np.float32, np.float64, np.intp]
+    params = [TYPES1]
     param_names = ['dtype']
 
     def setup(self, dtype):
