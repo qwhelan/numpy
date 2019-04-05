@@ -239,18 +239,31 @@
     *(tout *)iop1 = out;
 
 
+#define BINARY_REDUCE_INNER3(tin, tout, op) \
+    char *iop1 = (char *) args[0];                     \
+    tout out = *(tout *)iop1;    \
+    const char *ip = (char *) args[1];     \
+    const npy_intp is = (npy_intp) steps[1];    \
+    const npy_intp n = (npy_intp) dimensions[0];  \
+    for(npy_intp i = 0; i < n; i++) {    \
+      const tin in = *(tin *)(ip + i * is);     \
+  op; \
+ } \
+    *(tout *)iop1 = out;
+
+
 #define BINARY_REDUCE_LOOP_FAST(tin, tout, op)     \
     do { \
         if (IS_BINARY_REDUCE & IS_BINARY_RED_CONT(tin, tout)) {                              \
             if (abs_ptrdiff(args[2], args[0]) == 0 &&                         \
                 abs_ptrdiff(args[0], args[1]) >= NPY_MAX_SIMD_SIZE &&         \
                 npy_is_aligned(args[1], sizeof(tin))) {                       \
-                BINARY_REDUCE_INNER(tin, tout, op)               \
+                BINARY_REDUCE_INNER3(tin, tout, op)               \
             } else {                                                      \
-                BINARY_REDUCE_INNER(tin, tout, op)        \
+                BINARY_REDUCE_INNER3(tin, tout, op)        \
             } \
         } else {                                            \
-            BINARY_REDUCE_INNER(tin, tout, op)                \
+            BINARY_REDUCE_INNER3(tin, tout, op)                \
         } \
     }                                    \
     while (0)
