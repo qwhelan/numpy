@@ -70,6 +70,10 @@
         && (steps[0] == steps[2])\
         && (steps[0] == 0))
 
+#define IS_BINARY_RED_CONT(tin, tout) (steps[0] == 0 && \
+                                       steps[1] == sizeof(tin) &&       \
+                                       steps[2] == 0)
+
 /* binary loop input and output contiguous */
 #define IS_BINARY_CONT(tin, tout) (steps[0] == sizeof(tin) && \
                                    steps[1] == sizeof(tin) && \
@@ -222,5 +226,33 @@
     TYPE io1 = *(TYPE *)iop1; \
     BINARY_REDUCE_LOOP_INNER
 
+#define BINARY_REDUCE_INNER(tin, tout, op) \
+    char *iop1 = (char *) args[0];                     \
+    tout out = *(tout *)iop1;    \
+    char *ip = (char *) args[1];     \
+    const npy_intp is = (npy_intp) steps[1];    \
+    const npy_intp n = (npy_intp) dimensions[0];  \
+    for(npy_intp i = 0; i < n; ip+=is, i++) {    \
+      const tin in = *(tin *)ip;                 \
+  op; \
+ } \
+    *(tout *)iop1 = out;
+
+
+#define BINARY_REDUCE_LOOP_FAST(tin, tout, op)     \
+    do { \
+        if (IS_BINARY_REDUCE & IS_BINARY_RED_CONT(tin, tout)) {                              \
+            if (abs_ptrdiff(args[2], args[0]) == 0 &&                         \
+                abs_ptrdiff(args[0], args[1]) >= NPY_MAX_SIMD_SIZE &&         \
+                npy_is_aligned(args[1], sizeof(tin))) {                       \
+                BINARY_REDUCE_INNER(tin, tout, op)               \
+            } else {                                                      \
+                BINARY_REDUCE_INNER(tin, tout, op)        \
+            } \
+        } else {                                            \
+            BINARY_REDUCE_INNER(tin, tout, op)                \
+        } \
+    }                                    \
+    while (0)
 
 #endif /* _NPY_UMATH_FAST_LOOP_MACROS_H_ */

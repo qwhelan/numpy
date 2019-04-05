@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
-from .common import Benchmark, get_squares_
+from .common import Benchmark, get_squares_, TYPES1
 
 import numpy as np
 
@@ -58,6 +58,66 @@ class UFunc(Benchmark):
 
     def time_ufunc_types(self, ufuncname):
         [self.f(*arg) for arg in self.args]
+
+
+class UFuncs(Benchmark):
+    params = ['bool', 'uint8', 'int8', 'int16', 'int32', 'uint64', 'int64', 'float16', 'float32', 'float64', 'complex128']
+    param_names = ['dtype']
+
+    def setup(self, dtype):
+        self.arr = np.full(100000, 1, dtype=dtype)
+        self.val = self.arr[0]
+
+    def time_absolute(self, dtype):
+        np.abs(self.arr)
+
+    def time_ones_like(self, dtype):
+        np.ones_like(self.arr)
+
+    def time_add(self, dtype):
+        self.arr + self.arr
+
+    def time_add_reduce(self, dtype):
+        self.arr.sum()
+
+    def time_subtract(self, dtype):
+        self.arr - self.arr
+
+    def time_multiply(self, dtype):
+        self.arr * self.arr
+
+    def time_maximum(self, dtype):
+        np.maximum(self.arr, self.arr)
+
+    def time_maximum_reduce(self, dtype):
+        self.arr.max()
+
+    def time_remainder(self, dtype):
+        self.arr % self.arr
+
+    def time_remainder_val(self, dtype):
+        self.arr % self.val
+
+
+class UFuncsD(Benchmark):
+    params = ['timedelta']
+    param_names = ['dtype']
+
+    def setup(self, dtype):
+        self.arr = np.full(100000, 1, dtype=dtype + '64[ns]')
+        self.val = self.arr[0]
+
+    def time_negative(self, dtype):
+        np.negative(self.arr)
+
+    def time_isnat(self, dtype):
+        np.isnat(self.arr)
+
+    def time_maximum(self, dtype):
+        np.maximum(self.arr, self.arr)
+
+    def time_maximum_reduce(self, dtype):
+        self.arr.max()
 
 
 class Custom(Benchmark):
@@ -209,3 +269,14 @@ class ArgParsingReduce(Benchmark):
 
     def time_add_reduce_arg_parsing(self, arg_pack):
         np.add.reduce(*arg_pack.args, **arg_pack.kwargs)
+
+
+class IsNan(Benchmark):
+    params = [['bool'] + TYPES1]
+    param_names = ['dtype']
+
+    def setup(self, dtype):
+        self.arr = np.full(10**5, 0, dtype=dtype)
+
+    def time_isnan(self, dtype):
+        np.isnan(self.arr)
