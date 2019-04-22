@@ -79,3 +79,11 @@ class IndexingStructured0D(Benchmark):
 
     def time_scalar_all(self):
         self.b['a'] = self.a['a']
+
+
+class IndexingBool(Benchmark):
+    def setup(self):
+        self.arr = np.full(10**6, 1, dtype='bool')
+
+    def time_slice(self):
+        self.arr[self.arr]
