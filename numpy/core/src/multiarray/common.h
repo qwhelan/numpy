@@ -259,6 +259,19 @@ npy_memchr(char * haystack, char needle,
          * performance less important here.
          * memchr has large setup cost if 0 byte is close to start.
          */
+      if (NPY_CPU_HAVE_UNALIGNED_ACCESS && needle == 0 && stride == 1) {
+            /* iterate until last multiple of 4 */
+            char * block_end = haystack + size - (size % sizeof(unsigned int));
+            while (p < block_end) {
+                unsigned int  v = *(unsigned int*)p;
+                if (v == 0) {
+                    break;
+                }
+                p += sizeof(unsigned int);
+            }
+            /* handle rest */
+            subloopsize = (p - haystack);
+        }
         while (subloopsize < size && *p != needle) {
             subloopsize++;
             p += stride;
